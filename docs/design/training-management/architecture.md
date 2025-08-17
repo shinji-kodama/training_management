@@ -7,7 +7,7 @@ IT技術研修を提供する企業向けの研修管理Webアプリケーショ
 ## アーキテクチャパターン
 
 - **パターン**: モノリシック MVC + HTMX
-- **理由**: 
+- **理由**:
   - Loco.rsのView機能を活用したサーバーサイドレンダリング
   - HTMXによるシームレスなUI更新
   - フロントエンド/バックエンド分離の不要
@@ -21,19 +21,19 @@ graph TB
         BROWSER[Web Browser]
         HTMX[HTMX Requests]
     end
-    
+
     subgraph "Loco.rs Application"
         CONTROLLER[Controllers]
         VIEW[View Templates]
         AUTH[Session Auth]
         SERVICE[Business Logic]
     end
-    
+
     subgraph "Data Layer"
         MODEL[Models/ORM]
         DB[(PostgreSQL)]
     end
-    
+
     BROWSER --> CONTROLLER
     HTMX --> CONTROLLER
     CONTROLLER --> VIEW
@@ -99,7 +99,7 @@ graph TB
 #### **技術スタック**:
 - **テンプレートエンジン**: Loco.rs組み込みテンプレート (Tera/Handlebars)
 - **動的UI**: HTMX
-- **スタイリング**: Tailwind CSS または Bootstrap
+- **スタイリング**: Tailwind CSS
 - **コンポーネント**: 部分テンプレートによるコンポーネント化
 
 #### **主要画面テンプレート**:
@@ -172,7 +172,6 @@ graph TB
 Docker Compose:
   - Loco.rs Monolithic App
   - PostgreSQL
-  - File Storage Volume
 ```
 
 ### 本番環境（AWS）
@@ -180,12 +179,12 @@ Docker Compose:
 AWS ECS:
   - Loco.rs Monolithic App
   - Auto Scaling
-  
+
 AWS RDS:
   - PostgreSQL
   - Multi-AZ配置
-  
-  
+
+
 AWS CloudFront:
   - 静的アセット配信
 ```

@@ -322,7 +322,7 @@ completion_criteria: string
 company_id?: UUID (null=公開)
 materials[]: array of {
   material_id: UUID,
-  period_weeks: integer,
+  period_days: integer,
   order_index: integer
 }
 _token: string
@@ -493,7 +493,10 @@ company_id: UUID
 title: string
 start_date: date
 end_date: date
-participant_ids[]: UUID[] (受講者ID配列)
+participants[]: array of {
+  student_id: UUID,
+  status?: integer (1-5, デフォルト: 3)
+}
 _token: string
 ```
 
@@ -530,10 +533,22 @@ Content-Type: text/html
 **リクエスト（Form）:**
 ```
 student_id: UUID
+status?: integer (1-5, デフォルト: 3)
 _token: string
 ```
 
-#### DELETE /projects/:id/participants/:student_id
+#### PUT /projects/:id/participants/:participant_id
+参加者状況更新
+
+**認証:** 管理者・研修担当者  
+**リクエスト（Form）:**
+```
+status?: integer (1-5)
+all_interviews_completed?: boolean
+_token: string
+```
+
+#### DELETE /projects/:id/participants/:participant_id
 参加者削除
 
 **認証:** 管理者・研修担当者
@@ -549,6 +564,7 @@ _token: string
 **クエリパラメータ:**
 - `project_id`: UUID
 - `student_id`: UUID
+- `project_participant_id`: UUID
 - `status`: enum(scheduled, completed, cancelled)
 - `date_from`: date
 - `date_to`: date
@@ -564,8 +580,7 @@ _token: string
 **認証:** 管理者・研修担当者  
 **リクエスト（Form）:**
 ```
-project_id: UUID
-student_id: UUID
+project_participant_id: UUID
 scheduled_at: datetime
 _token: string
 ```
@@ -589,7 +604,6 @@ _token: string
 scheduled_at?: datetime
 status?: enum(scheduled, completed, cancelled)
 notes?: string (Markdown)
-all_interviews_completed?: boolean
 _token: string
 ```
 

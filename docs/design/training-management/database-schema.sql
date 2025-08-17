@@ -50,7 +50,7 @@ CREATE TABLE students (
     organization VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     UNIQUE(email, company_id) -- 同一企業内でのメール重複防止
 );
 
@@ -88,10 +88,10 @@ CREATE TABLE training_materials (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     training_id UUID NOT NULL REFERENCES trainings(id) ON DELETE CASCADE,
     material_id UUID NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
-    period_weeks INTEGER NOT NULL CHECK (period_weeks > 0), -- 取り組み期間（週）
+    period_days INTEGER NOT NULL CHECK (period_days > 0), -- 取り組み期間（日）
     order_index INTEGER NOT NULL CHECK (order_index >= 0), -- 教材の順序
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     UNIQUE(training_id, material_id), -- 同一研修での教材重複防止
     UNIQUE(training_id, order_index) -- 同一研修での順序重複防止
 );
@@ -109,7 +109,7 @@ CREATE TABLE projects (
     created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     CHECK (end_date >= start_date) -- 終了日は開始日以降
 );
 
@@ -118,8 +118,12 @@ CREATE TABLE project_participants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+    status INTEGER NOT NULL CHECK (status BETWEEN 1 AND 5), -- 研修の状況(1: failed, 2: poor, 3: average, 4: good, 5: excellent)
+    all_interviews_completed BOOLEAN NOT NULL DEFAULT FALSE, -- 全面談完了フラグ
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
     UNIQUE(project_id, student_id) -- 同一プロジェクトでの重複参加防止
 );
 
@@ -128,13 +132,11 @@ CREATE TABLE project_participants (
 -- 個別面談テーブル
 CREATE TABLE interviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    project_participant_id UUID NOT NULL REFERENCES project_participants(id) ON DELETE CASCADE,
     interviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'cancelled')),
     notes TEXT, -- Markdown形式の面談記録
-    all_interviews_completed BOOLEAN NOT NULL DEFAULT FALSE, -- 全面談完了フラグ
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -154,10 +156,10 @@ CREATE TABLE meetings (
     created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     -- 繰り返し設定がある場合は終了日が必須
     CHECK (
-        (recurrence_type = 'none') OR 
+        (recurrence_type = 'none') OR
         (recurrence_type != 'none' AND recurrence_end_date IS NOT NULL)
     )
 );
@@ -216,11 +218,14 @@ CREATE INDEX idx_project_participants_project_id ON project_participants(project
 CREATE INDEX idx_project_participants_student_id ON project_participants(student_id);
 
 -- 面談関連
-CREATE INDEX idx_interviews_project_id ON interviews(project_id);
-CREATE INDEX idx_interviews_student_id ON interviews(student_id);
+CREATE INDEX idx_interviews_project_participant_id ON interviews(project_participant_id);
 CREATE INDEX idx_interviews_interviewer_id ON interviews(interviewer_id);
 CREATE INDEX idx_interviews_scheduled_at ON interviews(scheduled_at);
 CREATE INDEX idx_interviews_status ON interviews(status);
+
+-- プロジェクト参加者関連
+CREATE INDEX idx_project_participants_status ON project_participants(status);
+CREATE INDEX idx_project_participants_all_interviews_completed ON project_participants(all_interviews_completed);
 
 -- 定例会関連
 CREATE INDEX idx_meetings_project_id ON meetings(project_id);
@@ -252,6 +257,7 @@ CREATE TRIGGER update_students_updated_at BEFORE UPDATE ON students FOR EACH ROW
 CREATE TRIGGER update_materials_updated_at BEFORE UPDATE ON materials FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_trainings_updated_at BEFORE UPDATE ON trainings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_project_participants_updated_at BEFORE UPDATE ON project_participants FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_interviews_updated_at BEFORE UPDATE ON interviews FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_meetings_updated_at BEFORE UPDATE ON meetings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -287,8 +293,8 @@ CREATE OR REPLACE FUNCTION check_project_participant_company()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM projects p 
-        JOIN students s ON s.id = NEW.student_id 
+        SELECT 1 FROM projects p
+        JOIN students s ON s.id = NEW.student_id
         WHERE p.id = NEW.project_id AND p.company_id = s.company_id
     ) THEN
         RAISE EXCEPTION 'Student must belong to the same company as the project';
@@ -301,32 +307,32 @@ CREATE TRIGGER check_project_participant_company_trigger
     BEFORE INSERT OR UPDATE ON project_participants
     FOR EACH ROW EXECUTE FUNCTION check_project_participant_company();
 
--- 面談の受講者はプロジェクト参加者である必要がある
-CREATE OR REPLACE FUNCTION check_interview_participant()
+-- 面談の参照先はproject_participantsテーブルの有効なIDである必要がある
+CREATE OR REPLACE FUNCTION check_interview_project_participant()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM project_participants 
-        WHERE project_id = NEW.project_id AND student_id = NEW.student_id
+        SELECT 1 FROM project_participants
+        WHERE id = NEW.project_participant_id
     ) THEN
-        RAISE EXCEPTION 'Student must be a participant of the project for interviews';
+        RAISE EXCEPTION 'project_participant_id must reference a valid project participant';
     END IF;
     RETURN NEW;
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER check_interview_participant_trigger
+CREATE TRIGGER check_interview_project_participant_trigger
     BEFORE INSERT OR UPDATE ON interviews
-    FOR EACH ROW EXECUTE FUNCTION check_interview_participant();
+    FOR EACH ROW EXECUTE FUNCTION check_interview_project_participant();
 
 -- ===== 初期データ =====
 
 -- 管理者ユーザーの作成（パスワード: 'admin123' - 本番環境では変更必須）
-INSERT INTO users (email, name, role, password_hash) VALUES 
+INSERT INTO users (email, name, role, password_hash) VALUES
 ('admin@example.com', 'システム管理者', 'admin', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewV5oUcmK6UPj2Pi');
 
 -- サンプル企業データ
-INSERT INTO companies (name, contact_person, contact_email) VALUES 
+INSERT INTO companies (name, contact_person, contact_email) VALUES
 ('株式会社サンプル', '田中太郎', 'tanaka@sample.co.jp'),
 ('テストコーポレーション', '佐藤花子', 'sato@test-corp.co.jp');
 
@@ -334,7 +340,7 @@ INSERT INTO companies (name, contact_person, contact_email) VALUES
 
 -- アクティブなプロジェクト一覧ビュー
 CREATE VIEW active_projects AS
-SELECT 
+SELECT
     p.*,
     t.title as training_title,
     c.name as company_name,
@@ -350,28 +356,48 @@ GROUP BY p.id, t.title, c.name, u.name;
 
 -- 今週の面談一覧ビュー
 CREATE VIEW this_week_interviews AS
-SELECT 
+SELECT
     i.*,
     s.name as student_name,
     u.name as interviewer_name,
-    p.title as project_title
+    p.title as project_title,
+    pp.status as participant_status,
+    pp.all_interviews_completed
 FROM interviews i
-JOIN students s ON i.student_id = s.id
+JOIN project_participants pp ON i.project_participant_id = pp.id
+JOIN students s ON pp.student_id = s.id
+JOIN projects p ON pp.project_id = p.id
 JOIN users u ON i.interviewer_id = u.id
-JOIN projects p ON i.project_id = p.id
 WHERE i.scheduled_at >= date_trunc('week', CURRENT_TIMESTAMP)
   AND i.scheduled_at < date_trunc('week', CURRENT_TIMESTAMP) + interval '1 week'
   AND i.status = 'scheduled';
 
 -- 教材の利用統計ビュー
 CREATE VIEW material_usage_stats AS
-SELECT 
+SELECT
     m.*,
     COUNT(tm.training_id) as used_in_trainings,
-    AVG(tm.period_weeks) as avg_period_weeks
+    AVG(tm.period_days) as avg_period_days
 FROM materials m
 LEFT JOIN training_materials tm ON m.id = tm.material_id
 GROUP BY m.id;
+
+-- プロジェクト参加者の面談状況ビュー
+CREATE VIEW project_participant_interview_status AS
+SELECT
+    pp.*,
+    p.title as project_title,
+    s.name as student_name,
+    c.name as company_name,
+    COUNT(i.id) as total_interviews,
+    COUNT(CASE WHEN i.status = 'completed' THEN 1 END) as completed_interviews,
+    COUNT(CASE WHEN i.status = 'scheduled' THEN 1 END) as scheduled_interviews
+FROM project_participants pp
+JOIN projects p ON pp.project_id = p.id
+JOIN students s ON pp.student_id = s.id
+JOIN companies c ON s.company_id = c.id
+LEFT JOIN interviews i ON pp.id = i.project_participant_id
+GROUP BY pp.id, p.title, s.name, c.name;
 
 -- ===== 権限設定 =====
 

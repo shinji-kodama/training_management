@@ -78,7 +78,7 @@ export interface TrainingMaterial {
   id: UUID;
   training_id: UUID;
   material_id: UUID;
-  period_weeks: number; // 取り組み期間（週）
+  period_days: number; // 取り組み期間（日）
   order_index: number; // 教材の順序
   created_at: ISODate;
 }
@@ -124,19 +124,20 @@ export interface ProjectParticipant {
   id: UUID;
   project_id: UUID;
   student_id: UUID;
-  joined_at: ISODate;
+  status: number; // 研修の状況(1: failed, 2: poor, 3: average, 4: good, 5: excellent)
+  all_interviews_completed: boolean; // 全面談完了フラグ
+  created_at: ISODate;
+  updated_at: ISODate;
 }
 
 // 個別面談
 export interface Interview {
   id: UUID;
-  project_id: UUID;
-  student_id: UUID;
+  project_participant_id: UUID; // ProjectParticipant.id
   interviewer_id: UUID; // User.id
   scheduled_at: ISODate;
   status: InterviewStatus;
   notes: MarkdownText | null; // 面談記録
-  all_interviews_completed: boolean; // 全面談完了フラグ
   created_at: ISODate;
   updated_at: ISODate;
 }
@@ -274,7 +275,7 @@ export interface CreateTrainingRequest {
   company_id?: UUID | null;
   materials: {
     material_id: UUID;
-    period_weeks: number;
+    period_days: number;
     order_index: number;
   }[];
 }
@@ -346,7 +347,10 @@ export interface CreateProjectRequest {
   title: string;
   start_date: ISODate;
   end_date: ISODate;
-  participant_ids: UUID[]; // Student IDs
+  participants: {
+    student_id: UUID;
+    status?: number; // デフォルト: 3 (average)
+  }[];
 }
 
 export interface UpdateProjectRequest {
@@ -367,8 +371,7 @@ export interface ProjectResponse extends Project {
 // === 面談管理 ===
 
 export interface CreateInterviewRequest {
-  project_id: UUID;
-  student_id: UUID;
+  project_participant_id: UUID;
   scheduled_at: ISODate;
 }
 
@@ -376,18 +379,21 @@ export interface UpdateInterviewRequest {
   scheduled_at?: ISODate;
   status?: InterviewStatus;
   notes?: MarkdownText;
-  all_interviews_completed?: boolean;
 }
 
 export interface InterviewResponse extends Interview {
-  project: Pick<Project, 'id' | 'title'>;
-  student: Pick<Student, 'id' | 'name'>;
+  project_participant: ProjectParticipant & {
+    project: Pick<Project, 'id' | 'title'>;
+    student: Pick<Student, 'id' | 'name'>;
+  };
   interviewer: Pick<User, 'id' | 'name'>;
 }
 
 export interface InterviewAlert {
+  project_participant_id: UUID;
   student_id: UUID;
   student_name: string;
+  project_title: string;
   message: string;
   requires_next_interview: boolean;
 }
@@ -454,6 +460,7 @@ export interface ProjectSearchParams {
   training_id?: UUID;
   company_id?: UUID;
   status?: 'active' | 'completed' | 'upcoming';
+  participant_status?: number; // 参加者の研修状況フィルタ
   page?: number;
   per_page?: number;
 }
