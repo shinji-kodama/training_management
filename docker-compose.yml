@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: training_management_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: training_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docs/design/training-management/database-schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    networks:
+      - training_management_network
+
+  # 将来的にアプリケーションコンテナを追加する場合
+  # app:
+  #   build: .
+  #   container_name: training_management_app
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5150:5150"
+  #   environment:
+  #     - DATABASE_URL=postgres://postgres:password@postgres:5432/training_management
+  #     - RUST_LOG=info
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - training_management_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  training_management_network:
+    driver: bridge
