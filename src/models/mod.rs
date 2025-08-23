@@ -1,2 +1,13 @@
 pub mod _entities;
 pub mod users;
+pub mod meetings;
+pub mod materials;
+pub mod sessions;
+pub mod project_participants;
+pub mod audit_logs;
+pub mod interviews;
+pub mod training_materials;
+pub mod students;
+pub mod companies;
+pub mod projects;
+pub mod trainings;

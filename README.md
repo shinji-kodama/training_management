@@ -11,7 +11,7 @@ ToB IT研修提供者向けの包括的な研修管理システムです。[Loco
 ### TASK-001: 開発環境セットアップ ✅
 - **実装日**: 2025-08-17
 - **概要**: Loco.rs開発環境とPostgreSQL環境の構築
-- **設定内容**: 
+- **設定内容**:
   - Rust + Cargo環境構築
   - Docker Compose設定（PostgreSQL 15）
   - 環境変数設定（.env）
@@ -43,7 +43,7 @@ ToB IT研修提供者向けの包括的な研修管理システムです。[Loco
 ## セットアップ手順
 
 ### 前提条件
-- Rust 1.70+ 
+- Rust 1.70+
 - Docker 20.0+
 - Docker Compose v2.0+
 - PostgreSQL 15+（Dockerで自動セットアップ）
@@ -55,7 +55,7 @@ ToB IT研修提供者向けの包括的な研修管理システムです。[Loco
 git clone <repository-url>
 cd training_management
 
-# 依存関係のインストール  
+# 依存関係のインストール
 cargo build
 
 # PostgreSQLの起動
@@ -74,7 +74,7 @@ cargo loco start
 
 ```bash
 # データベース設定
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/training_management
+DATABASE_URL=postgres://postgres:postgres@localhost:6543/training_management
 
 # アプリケーション設定
 RUST_LOG=debug
@@ -130,7 +130,7 @@ cargo loco db schema
 - **Password**: admin123
 
 ### データベース
-- **Host**: localhost:5432
+- **Host**: localhost:6543
 - **Database**: training_management
 - **User**: postgres
 - **Password**: postgres
@@ -167,7 +167,7 @@ cargo loco db schema
 # モデル生成
 cargo loco generate model <name>
 
-# コントローラー生成  
+# コントローラー生成
 cargo loco generate controller <name>
 
 # マイグレーション生成
@@ -221,7 +221,7 @@ cargo tarpaulin
 
 #### 問題1: データベース接続エラー
 - **症状**: `DB connection failed`
-- **解決方法**: 
+- **解決方法**:
   ```bash
   docker-compose up -d postgres
   # PostgreSQLの起動を確認
@@ -240,7 +240,7 @@ cargo tarpaulin
 
 #### 問題3: ポート競合
 - **症状**: `Address already in use`
-- **解決方法**: 
+- **解決方法**:
   ```bash
   # ポート使用状況確認
   lsof -i :5150
@@ -278,7 +278,7 @@ RUST_LOG=trace cargo loco start
 ## 更新履歴
 
 - **2025-08-17**: TASK-001 開発環境セットアップ完了
-- **2025-08-17**: TASK-002 Loco.rsプロジェクト初期化完了  
+- **2025-08-17**: TASK-002 Loco.rsプロジェクト初期化完了
 - **2025-08-17**: TASK-003 データベーススキーマ実装完了
 - **2025-08-17**: Loco.rs 0.16.3へアップデート完了
 

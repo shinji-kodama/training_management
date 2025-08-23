@@ -37,14 +37,14 @@ auth:
     cookie_name: "training_session"
     timeout: 86400
     store: "database"
-  
+
   # JWT authentication (for API endpoints if needed)
   jwt:
     secret: IPdhz16CqDVPMmT2FKd3
     expiration: 604800 # 7 days
 
 database:
-  uri: {{ get_env(name="DATABASE_URL", default="postgres://postgres:password@localhost:5432/training_management") }}
+  uri: {{ get_env(name="DATABASE_URL", default="postgres://postgres:password@localhost:6543/training_management") }}
 ```
 
 **設定内容**:
@@ -76,7 +76,7 @@ async fn index(State(_ctx): State<AppContext>) -> Result<Response> {
         user_count: 0, // TODO: Get from database
         project_count: 0, // TODO: Get from database
     };
-    
+
     format::json(response)
 }
 
@@ -137,16 +137,16 @@ assets/
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}研修管理システム{% endblock %}</title>
-    
+
     <!-- Tailwind CSS CDN for development -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- HTMX for dynamic interactions -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/app.css">
-    
+
     {% block head %}{% endblock %}
 </head>
 <body class="bg-gray-50 font-sans">
@@ -292,14 +292,14 @@ curl -s http://localhost:5150/
 - **発生状況**: 初回routes確認時
 - **エラーメッセージ**: `role "loco" does not exist`
 - **解決方法**: `config/development.yaml`のデータベースURLを修正
-  - 修正前: `postgres://loco:loco@localhost:5432/training_management_development`
-  - 修正後: `postgres://postgres:password@localhost:5432/training_management`
+  - 修正前: `postgres://loco:loco@localhost:6543/training_management_development`
+  - 修正後: `postgres://postgres:password@localhost:6543/training_management`
 
 ### 問題2: Loco CLI コマンド不一致
 
 - **発生状況**: `cargo loco` コマンド実行時
 - **エラーメッセージ**: `no such command: loco`
-- **解決方法**: 
+- **解決方法**:
   1. `loco-cli` を `loco` に更新
   2. 既存プロジェクトでは `cargo run --` 使用を確認
 

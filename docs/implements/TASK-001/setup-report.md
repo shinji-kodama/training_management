@@ -9,7 +9,7 @@
 
 ## 設計文書参照
 
-- **参照文書**: 
+- **参照文書**:
   - docs/design/training-management/architecture.md (アーキテクチャ設計)
   - docs/design/training-management/database-schema.sql (データベーススキーマ)
   - docs/design/training-management/api-endpoints.md (API設計)
@@ -50,7 +50,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5432:5432"
+      - "6543:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docs/design/training-management/database-schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
@@ -72,7 +72,7 @@ networks:
 
 ```bash
 # データベース設定
-DATABASE_URL=postgres://postgres:password@localhost:5432/training_management
+DATABASE_URL=postgres://postgres:password@localhost:6543/training_management
 
 # アプリケーション設定
 RUST_LOG=info
@@ -160,7 +160,7 @@ training_management/
 ### 問題3: プロジェクト構造の統合
 
 - **発生状況**: 既存ディレクトリにLoco.rsプロジェクトを作成
-- **対処法**: 
+- **対処法**:
   - 一時ディレクトリにプロジェクト作成後、ファイルを移動
   - 既存のdocsディレクトリと統合
 
@@ -176,7 +176,7 @@ PostgreSQL 15.14 (Debian 15.14-1.pgdg13+1) on aarch64-unknown-linux-gnu, compile
 ```bash
 # DATABASE_URLが適切に設定されていることを確認
 echo $DATABASE_URL
-# postgres://postgres:password@localhost:5432/training_management
+# postgres://postgres:password@localhost:6543/training_management
 ```
 
 ### プロジェクト構造確認
@@ -204,7 +204,7 @@ echo $DATABASE_URL
 ## 実装時間
 
 - **実行時間**: 約30分
-- **主要作業**: 
+- **主要作業**:
   - Loco.rsプロジェクト初期化（5分）
   - Docker設定作成（10分）
   - 環境変数設定（5分）

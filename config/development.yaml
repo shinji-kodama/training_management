@@ -41,8 +41,6 @@ workers:
   #   - BackgroundAsync - Workers operate asynchronously in the background, processing tasks with async capabilities.
   mode: BackgroundAsync
 
-  
-
 # Mailer Configuration.
 mailer:
   # SMTP mailer configuration.
@@ -71,7 +69,7 @@ mailer:
 # Database Configuration
 database:
   # Database connection URI
-  uri: {{ get_env(name="DATABASE_URL", default="postgres://postgres:password@localhost:5432/training_management") }}
+  uri: {{ get_env(name="DATABASE_URL", default="postgres://postgres:password@localhost:6543/training_management") }}
   # When enabled, the sql query will be logged.
   enable_logging: false
   # Set the timeout duration when acquiring a connection.
@@ -99,7 +97,7 @@ auth:
     timeout: 86400
     # Session storage (using database)
     store: "database"
-  
+
   # JWT authentication (for API endpoints if needed)
   jwt:
     # Secret key for token generation and verification

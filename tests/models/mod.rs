@@ -1,1 +1,11 @@
 mod users;
+mod companies;
+mod materials;
+mod students;
+mod trainings;
+mod training_materials;
+mod projects;
+mod project_participants;
+mod interviews;
+mod meetings;
+mod audit_logs;

@@ -34,6 +34,7 @@ sea-orm = { version = "1.1.0", features = [
 chrono = { version = "0.4" }
 validator = { version = "0.20" }
 uuid = { version = "1.6.0", features = ["v4"] }
+url = { version = "2.5" }
 include_dir = { version = "0.7" }
 # view engine i18n
 fluent-templates = { version = "0.8.0", features = ["tera"] }

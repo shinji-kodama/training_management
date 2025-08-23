@@ -21,7 +21,7 @@ server:
   # The UI hostname or IP address that mailers will point to.
   host: http://localhost
   # Out of the box middleware configuration. to disable middleware you can changed the `enable` field to `false` of comment the middleware block
-  middlewares: 
+  middlewares:
     static:
       enable: true
       must_exist: true
@@ -38,8 +38,6 @@ workers:
   #   - ForegroundBlocking - Workers operate in the foreground and block until tasks are completed.
   #   - BackgroundAsync - Workers operate asynchronously in the background, processing tasks with async capabilities.
   mode: ForegroundBlocking
-
-  
 
 # Mailer Configuration.
 mailer:
@@ -68,7 +66,7 @@ mailer:
 # Database Configuration
 database:
   # Database connection URI
-  uri: {{ get_env(name="DATABASE_URL", default="postgres://loco:loco@localhost:5432/training_management_test") }}
+  uri: {{ get_env(name="DATABASE_URL", default="postgres://loco:loco@localhost:6543/training_management_test") }}
   # When enabled, the sql query will be logged.
   enable_logging: false
   # Set the timeout duration when acquiring a connection.

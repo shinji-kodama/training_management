@@ -18,7 +18,7 @@ source .env && echo "DATABASE_URL: $DATABASE_URL" && echo "RUST_LOG: $RUST_LOG" 
 ```
 
 **確認結果**:
-- [x] DATABASE_URL: postgres://postgres:password@localhost:5432/training_management (期待値: 正しいDB URL)
+- [x] DATABASE_URL: postgres://postgres:password@localhost:6543/training_management (期待値: 正しいDB URL)
 - [x] RUST_LOG: info (期待値: info)
 - [x] APP_PORT: 5150 (期待値: 5150)
 
@@ -345,7 +345,7 @@ curl -s http://localhost:5150/
 **利用可能な開発コマンド**:
 ```bash
 cargo run -- start          # サーバー起動
-cargo run -- routes         # ルート確認  
+cargo run -- routes         # ルート確認
 cargo run -- db migrate     # マイグレーション
 cargo run -- watch          # 開発モード（ファイル監視）
 cargo run -- doctor         # 設定診断
