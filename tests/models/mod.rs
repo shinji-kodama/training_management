@@ -10,3 +10,4 @@ mod interviews;
 mod meetings;
 mod audit_logs;
 mod sessions;
+mod rbac;

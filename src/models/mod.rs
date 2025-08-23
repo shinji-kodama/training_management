@@ -3,6 +3,7 @@ pub mod users;
 pub mod meetings;
 pub mod materials;
 pub mod sessions;
+pub mod rbac;
 pub mod project_participants;
 pub mod audit_logs;
 pub mod interviews;
