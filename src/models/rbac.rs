@@ -23,7 +23,7 @@ const AUTHORIZATION_DENIED_STATUS: u16 = 403;
 /// 【階層構造】: Admin > Trainer > Instructor の権限階層
 /// 【セキュリティ】: 明確な権限境界による不正アクセス防止
 /// 🟢 青信号: 要件定義書から直接抽出した確実な仕様
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize, serde::Serialize)]
 pub enum UserRole {
     Instructor, // 講師: 読み取り専用の最小権限
     Trainer,    // 研修担当者: 教材・研修管理権限

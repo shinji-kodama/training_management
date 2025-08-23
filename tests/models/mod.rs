@@ -11,3 +11,4 @@ mod meetings;
 mod audit_logs;
 mod sessions;
 mod rbac;
+mod user_management;

@@ -12,3 +12,4 @@ pub mod students;
 pub mod companies;
 pub mod projects;
 pub mod trainings;
+pub mod user_management;

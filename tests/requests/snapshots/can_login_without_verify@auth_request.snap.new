@@ -1,0 +1,6 @@
+---
+source: tests/requests/auth.rs
+assertion_line: 168
+expression: login_response.text()
+---
+"{\"success\":true,\"user\":{\"pid\":\"PID\",\"name\":\"loco\",\"email\":\"test@loco.com\",\"is_verified\":false},\"csrf_token\":\"Z73rsbR8J2xXZov3np6zBPK+ZA2Bdlf6e2r/w8Vzvqw=\"}"
