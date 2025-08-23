@@ -14,6 +14,7 @@ pub struct Model {
     pub expires_at: DateTimeWithTimeZone,
     pub created_at: DateTimeWithTimeZone,
     pub last_accessed_at: DateTimeWithTimeZone,
+    pub csrf_token: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

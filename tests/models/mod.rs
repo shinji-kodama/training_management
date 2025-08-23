@@ -9,3 +9,4 @@ mod project_participants;
 mod interviews;
 mod meetings;
 mod audit_logs;
+mod sessions;

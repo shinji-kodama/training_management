@@ -3,13 +3,15 @@ use crate::{
     models::{
         _entities::users,
         users::{LoginParams, RegisterParams},
+        sessions,
     },
-    views::auth::{CurrentResponse, LoginResponse},
+    views::auth::{CurrentResponse, LoginResponse, SessionLoginResponse},
 };
 use axum::debug_handler;
 use loco_rs::prelude::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use uuid;
 use std::sync::OnceLock;
 
 pub static EMAIL_DOMAIN_RE: OnceLock<Regex> = OnceLock::new();
@@ -34,6 +36,11 @@ pub struct ResetParams {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MagicLinkParams {
     pub email: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LogoutParams {
+    pub session_token: String,
 }
 
 /// Register function creates a new user with the given parameters and sends a
@@ -126,7 +133,7 @@ async fn reset(State(ctx): State<AppContext>, Json(params): Json<ResetParams>) -
     format::json(())
 }
 
-/// Creates a user login and returns a token
+/// Creates a user login and returns a session with CSRF token
 #[debug_handler]
 async fn login(State(ctx): State<AppContext>, Json(params): Json<LoginParams>) -> Result<Response> {
     let user = users::Model::find_by_email(&ctx.db, &params.email).await?;
@@ -137,13 +144,42 @@ async fn login(State(ctx): State<AppContext>, Json(params): Json<LoginParams>) -
         return unauthorized("unauthorized!");
     }
 
-    let jwt_secret = ctx.config.get_jwt_config()?;
+    // セッションベース認証: JWTの代わりにセッションを作成
+    let session_token = format!("session_{}", uuid::Uuid::new_v4());
+    let expires_at = chrono::Utc::now() + chrono::Duration::hours(sessions::DEFAULT_SESSION_DURATION_HOURS);
 
-    let token = user
-        .generate_jwt(&jwt_secret.secret, jwt_secret.expiration)
-        .or_else(|_| unauthorized("unauthorized!"))?;
+    let session = sessions::Model::create_session(
+        &ctx.db,
+        user.id,
+        session_token,
+        expires_at.into(),
+    ).await?;
 
-    format::json(LoginResponse::new(&user, &token))
+    let csrf_token = session.csrf_token.clone()
+        .ok_or_else(|| loco_rs::Error::string("Failed to generate CSRF token"))?;
+
+    format::json(SessionLoginResponse::new(&user, csrf_token))
+}
+
+/// Logout and invalidate session
+#[debug_handler]
+async fn logout(State(ctx): State<AppContext>, Json(params): Json<LogoutParams>) -> Result<Response> {
+    // セッショントークンによる認証確認とセッション削除
+    match sessions::Model::find_by_token(&ctx.db, &params.session_token).await {
+        Ok(session) => {
+            // セッションをデータベースから削除
+            sessions::Entity::delete_by_id(session.id)
+                .exec(&ctx.db)
+                .await
+                .map_err(|_| loco_rs::Error::string("Failed to logout"))?;
+            
+            format::json(())
+        },
+        Err(_) => {
+            // セッションが見つからない場合も成功として扱う（セキュリティ）
+            format::json(())
+        }
+    }
 }
 
 #[debug_handler]
@@ -220,6 +256,7 @@ pub fn routes() -> Routes {
         .add("/register", post(register))
         .add("/verify/{token}", get(verify))
         .add("/login", post(login))
+        .add("/logout", post(logout))
         .add("/forgot", post(forgot))
         .add("/reset", post(reset))
         .add("/current", get(current))
