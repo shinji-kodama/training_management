@@ -1,5 +1,10 @@
 mod auth;
 mod materials;
 mod prepare_data;
+mod projects;
+mod projects_boundary;
+mod projects_integration;
+mod projects_participants;
+mod projects_security;
 mod trainings;
 mod trainings_security;
