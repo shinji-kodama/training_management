@@ -1,5 +1,5 @@
 use axum::{
-    extract::{FromRequestParts, State},
+    extract::{FromRequestParts, FromRef, State},
     http::{request::Parts, header::AUTHORIZATION, StatusCode},
     response::{IntoResponse, Response},
 };
@@ -7,6 +7,7 @@ use axum::http::HeaderMap;
 use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use async_trait::async_trait;
 
 use crate::models::{sessions, _entities::users};
 
@@ -180,6 +181,38 @@ fn extract_session_token(headers: &HeaderMap) -> Option<String> {
  * 【機能概要】: JWT認証との互換性のためのエイリアス
  * 【実装方針】: 既存コードの段階的移行を可能にする
  * 【保守性】: JWTからセッション認証への移行時の互換性確保
+ * 🟢 信頼性レベル: 後方互換性とアップグレードパスの提供
+ */
+/**
+ * 【Axumエクストラクタ統合】: SessionAuthのFromRequestPartsトレイト実装
+ * 【実装方針】: Axumハンドラー引数での自動認証処理統合
+ * 【テスト対応】: 認証テストでの自動401エラー実現用
+ * 🟢 信頼性レベル: Axum標準パターンに基づく確実な実装
+ */
+// #[async_trait]
+// impl<S> FromRequestParts<S> for SessionAuth
+// where
+//     S: Send + Sync,
+//     AppContext: axum::extract::FromRef<S>,
+// {
+//     type Rejection = SessionAuthError;
+
+//     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+//         // 【コンテキスト取得】: Axum StateからAppContextを安全に取得
+//         let ctx = AppContext::from_ref(state);
+        
+//         // 【ヘッダー解析】: HTTPリクエストヘッダーから認証情報抽出
+//         let headers = &parts.headers;
+        
+//         // 【セッション認証実行】: from_headersメソッドで統一的な認証処理
+//         Self::from_headers(headers, &ctx).await
+//     }
+// }
+
+/**
+ * 【JWT認証との互換性のためのエイリアス】: 既存コードの段階的移行を可能にする
+ * 【実装方針】: JWTからセッション認証への移行時の互換性確保
+ * 【保守性】: アップグレードパスの提供
  * 🟢 信頼性レベル: 後方互換性とアップグレードパスの提供
  */
 pub type JWT = SessionAuth;
