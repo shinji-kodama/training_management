@@ -53,6 +53,7 @@ impl Hooks for App {
         AppRoutes::with_default_routes() // controller routes below
             .add_route(controllers::auth::routes())
             .add_route(controllers::dashboard::routes())
+            .add_route(controllers::interviews::routes())
             .add_route(controllers::materials::routes())
             .add_route(controllers::projects::routes())
             .add_route(controllers::trainings::routes())

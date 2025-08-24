@@ -1,4 +1,7 @@
 mod auth;
+mod interviews;
+mod interviews_simple;
+mod interviews_integration;
 mod materials;
 mod prepare_data;
 mod projects;
