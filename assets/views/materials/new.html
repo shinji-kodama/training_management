@@ -1,0 +1,132 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}教材管理 - 新規作成{% endblock title %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">新規教材作成</h1>
+            <a href="/materials" 
+               class="text-gray-600 hover:text-gray-800 font-medium">
+                ← 一覧に戻る
+            </a>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+            <form action="{{ form_action }}" method="{{ form_method }}" class="space-y-6">
+                <!-- CSRF Token -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <!-- タイトル -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700">
+                        教材タイトル <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           name="title" 
+                           id="title" 
+                           required
+                           maxlength="255"
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="例: Rust言語完全ガイド">
+                    <p class="mt-1 text-sm text-gray-600">
+                        教材の名前を入力してください（255文字以内）
+                    </p>
+                </div>
+
+                <!-- URL -->
+                <div>
+                    <label for="url" class="block text-sm font-medium text-gray-700">
+                        教材URL <span class="text-red-500">*</span>
+                    </label>
+                    <input type="url" 
+                           name="url" 
+                           id="url" 
+                           required
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="https://example.com/course">
+                    <p class="mt-1 text-sm text-gray-600">
+                        教材のURLを入力してください（完全なURLで入力）
+                    </p>
+                </div>
+
+                <!-- 説明 -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">
+                        教材説明 <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="description" 
+                              id="description" 
+                              rows="4" 
+                              required
+                              maxlength="10000"
+                              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3
+                                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="教材の内容や学習目標について説明してください"></textarea>
+                    <p class="mt-1 text-sm text-gray-600">
+                        教材の詳細な説明を入力してください（10,000文字以内）
+                    </p>
+                </div>
+
+                <!-- 推奨レベル -->
+                <div>
+                    <label for="recommendation_level" class="block text-sm font-medium text-gray-700">
+                        推奨レベル <span class="text-red-500">*</span>
+                    </label>
+                    <select name="recommendation_level" 
+                            id="recommendation_level" 
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">選択してください</option>
+                        <option value="1">★☆☆☆☆ 1 - 基礎レベル</option>
+                        <option value="2">★★☆☆☆ 2 - 初級レベル</option>
+                        <option value="3">★★★☆☆ 3 - 中級レベル</option>
+                        <option value="4">★★★★☆ 4 - 上級レベル</option>
+                        <option value="5">★★★★★ 5 - エキスパートレベル</option>
+                    </select>
+                    <p class="mt-1 text-sm text-gray-600">
+                        教材の難易度・推奨度を5段階で選択してください
+                    </p>
+                </div>
+
+                <!-- 送信ボタン -->
+                <div class="flex justify-end space-x-4">
+                    <a href="/materials" 
+                       class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                        キャンセル
+                    </a>
+                    <button type="submit" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        教材を作成
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// フォームバリデーション強化
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const urlInput = document.getElementById('url');
+    
+    form.addEventListener('submit', function(e) {
+        // URL形式チェック
+        try {
+            new URL(urlInput.value);
+        } catch {
+            e.preventDefault();
+            alert('有効なURL形式で入力してください');
+            urlInput.focus();
+            return;
+        }
+    });
+});
+</script>
+{% endblock content %}

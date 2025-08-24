@@ -38,6 +38,7 @@ url = { version = "2.5" }
 rand = { version = "0.8" }
 base64 = { version = "0.21" }
 bcrypt = { version = "0.15" }
+html-escape = { version = "0.2" }
 thiserror = { version = "2.0" }
 include_dir = { version = "0.7" }
 # view engine i18n
