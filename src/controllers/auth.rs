@@ -6,7 +6,11 @@ use crate::{
         sessions,
     },
     views::auth::{CurrentResponse, LoginResponse, SessionLoginResponse},
+    controllers::session_auth::SessionAuth,
 };
+
+// 【互換性エイリアス】: 既存コードとの後方互換性のため
+pub type JWT = SessionAuth;
 use axum::debug_handler;
 use loco_rs::prelude::*;
 use regex::Regex;
@@ -183,8 +187,13 @@ async fn logout(State(ctx): State<AppContext>, Json(params): Json<LogoutParams>)
 }
 
 #[debug_handler]
-async fn current(auth: auth::JWT, State(ctx): State<AppContext>) -> Result<Response> {
-    let user = users::Model::find_by_pid(&ctx.db, &auth.claims.pid).await?;
+async fn current(headers: axum::http::HeaderMap, State(ctx): State<AppContext>) -> Result<Response> {
+    // 【セッション認証】: ヘッダーからセッション情報を取得・検証
+    let auth = SessionAuth::from_headers(&headers, &ctx)
+        .await
+        .map_err(|e| Error::Unauthorized(e.to_string()))?;
+    
+    let user = users::Model::find_by_pid(&ctx.db, &auth.claims.pid.to_string()).await?;
     format::json(CurrentResponse::new(&user))
 }
 

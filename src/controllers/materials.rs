@@ -1,8 +1,10 @@
-use axum::debug_handler;
+use axum::{debug_handler, http::HeaderMap};
 use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_json;
 use crate::models::{materials, _entities::materials as materials_entity};
 use crate::views::materials::*;
+use crate::controllers::session_auth::SessionAuth;
 
 /**
  * 【機能概要】: 教材作成用のフォームパラメータ構造体
@@ -27,9 +29,13 @@ pub struct CreateMaterialParams {
  */
 #[debug_handler]
 pub async fn list(
-    auth: auth::JWT,
+    headers: HeaderMap,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // 【セッション認証】: ヘッダーからセッション情報を取得・検証
+    let auth = SessionAuth::from_headers(&headers, &ctx)
+        .await
+        .map_err(|e| Error::Unauthorized(e.to_string()))?;
     // 【認証必須】: JWT認証が必要、未認証の場合は401エラー
     // 【RBAC確認】: 管理者・トレーナー・講師のみアクセス可能
     if !matches!(auth.claims.role.as_str(), "admin" | "trainer" | "instructor") {
@@ -55,7 +61,7 @@ pub async fn list(
     };
 
     // 【HTML応答】: セキュアなテンプレートレンダリング
-    format::render().view(&view_data, "materials/list.html")
+    format::render().template("materials/list.html", serde_json::to_value(&view_data)?)
 }
 
 /**
@@ -66,22 +72,21 @@ pub async fn list(
  */
 #[debug_handler]
 pub async fn new(
-    auth: auth::JWT,
-    State(_ctx): State<AppContext>,
+    headers: HeaderMap,
+    State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // 【セッション認証】: ヘッダーからセッション情報を取得・検証
+    let auth = SessionAuth::from_headers(&headers, &ctx)
+        .await
+        .map_err(|e| Error::Unauthorized(e.to_string()))?;
     // 【認証必須】: JWT認証が必要、未認証の場合は401エラー
     // 【RBAC確認】: 管理者・トレーナー・講師のみアクセス可能
     if !matches!(auth.claims.role.as_str(), "admin" | "trainer" | "instructor") {
         return Err(Error::Unauthorized("教材作成フォームへのアクセス権限がありません".to_string()));
     }
 
-    // 【CSRFトークン生成】: セキュリティ強化のためCSRFトークンを生成
-    use rand::Rng;
-    let csrf_token: String = rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
-        .take(32)
-        .map(char::from)
-        .collect();
+    // 【CSRFトークン取得】: セッションに保存されたCSRFトークンを使用
+    let csrf_token = auth.claims.csrf_token.clone();
     
     // 【ビューデータ構築】: セキュアなフォーム表示データ
     let view_data = MaterialNewView {
@@ -92,7 +97,7 @@ pub async fn new(
     };
 
     // 【HTML応答】: セキュアなテンプレートレンダリング（CSRF保護付き）
-    format::render().view(&view_data, "materials/new.html")
+    format::render().template("materials/new.html", serde_json::to_value(&view_data)?)
 }
 
 /**
@@ -103,17 +108,21 @@ pub async fn new(
  */
 #[debug_handler]
 pub async fn create(
-    auth: auth::JWT,
+    headers: HeaderMap,
     State(ctx): State<AppContext>,
     Json(params): Json<CreateMaterialParams>,
 ) -> Result<Response> {
+    // 【セッション認証】: ヘッダーからセッション情報を取得・検証
+    let auth = SessionAuth::from_headers(&headers, &ctx)
+        .await
+        .map_err(|e| Error::Unauthorized(e.to_string()))?;
     // 【認証必須】: JWT認証が必要、未認証の場合は401エラー
     // 【RBAC確認】: 管理者・トレーナー・講師のみ作成可能
     if !matches!(auth.claims.role.as_str(), "admin" | "trainer" | "instructor") {
         return Err(Error::Unauthorized("教材作成権限がありません".to_string()));
     }
     
-    // 【認証ユーザー取得】: JWTからユーザーIDを取得
+    // 【認証ユーザー取得】: セッションからユーザーIDを取得
     let created_by_id = auth.claims.user_id;
 
     // 【ドメイン抽出】: URLからドメイン名を自動抽出（セキュア実装）
@@ -220,10 +229,14 @@ pub async fn create(
  */
 #[debug_handler]
 pub async fn show(
-    auth: auth::JWT,
+    headers: HeaderMap,
     Path(id): Path<uuid::Uuid>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
+    // 【セッション認証】: ヘッダーからセッション情報を取得・検証
+    let auth = SessionAuth::from_headers(&headers, &ctx)
+        .await
+        .map_err(|e| Error::Unauthorized(e.to_string()))?;
     // 【認証必須】: JWT認証が必要、未認証の場合は401エラー
     // 【RBAC確認】: 管理者・トレーナー・講師のみアクセス可能
     if !matches!(auth.claims.role.as_str(), "admin" | "trainer" | "instructor") {
@@ -252,7 +265,7 @@ pub async fn show(
             };
             
             // 【HTML応答】: セキュアなテンプレートレンダリング
-            format::render().view(&view_data, "materials/show.html")
+            format::render().template("materials/show.html", serde_json::to_value(&view_data)?)
         },
         None => {
             // 【404エラー】: 存在しない教材IDの場合の適切なエラー応答
