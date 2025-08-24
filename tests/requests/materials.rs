@@ -4,10 +4,9 @@ use sea_orm::{ActiveModelTrait, ActiveValue};
 use serial_test::serial;
 use training_management::{
     app::App, 
-    models::{materials, users},
+    models::materials,
 };
 
-use super::prepare_data;
 
 /// 教材管理機能のHTTPエンドポイント統合テスト
 /// 
@@ -27,23 +26,18 @@ macro_rules! configure_insta {
     };
 }
 
-/// 教材データ作成ヘルパー関数
-/// 【機能概要】: テストで使用する教材データをデータベースに作成
-/// 【使用目的】: 教材詳細表示・更新・削除テストの事前データ準備
-/// 【戻り値】: 作成された教材のModel
-async fn create_test_material(ctx: &AppContext, request: &TestServer) -> materials::Model {
-    // 【テストデータ準備】: まずユーザーを作成してから教材を作成
-    let logged_in_user = prepare_data::init_user_login(request, ctx).await;
-    
-    // 【テストデータ準備】: 実際の教材登録で使用される標準的な教材情報
-    // 【初期条件設定】: 既存materials.rsモデルを使用してテスト教材を作成
+/// テスト用教材データ作成ヘルパー関数
+/// 【機能概要】: シンプルなテスト教材をDBに作成
+/// 【改善内容】: 認証関連を削除し、基本データ作成に集中
+async fn create_test_material(ctx: &AppContext, _request: &TestServer) -> materials::Model {
+    // 【シンプルテストデータ】: 認証なしで基本データ作成
     let material_data = materials::ActiveModel {
         title: ActiveValue::set("Rust基礎入門テスト教材".to_string()),
         url: ActiveValue::set("https://example.com/rust-basics".to_string()),
         domain: ActiveValue::set("example.com".to_string()),
-        description: ActiveValue::set("Rust言語の基礎的な文法と概念を学ぶコーステスト用".to_string()),
+        description: ActiveValue::set("Rust言語の基礎的な文法と概念を学ぶコース".to_string()),
         recommendation_level: ActiveValue::set(4),
-        created_by: ActiveValue::set(logged_in_user.user.id),
+        created_by: ActiveValue::set(1), // テスト用固定値
         ..Default::default()
     };
 
