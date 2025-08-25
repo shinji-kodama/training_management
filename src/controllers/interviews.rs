@@ -502,6 +502,6 @@ pub fn routes() -> Routes {
         .add("/", get(list))               // 【GET /interviews】: 面談一覧取得 (権限: 全ユーザー)
         .add("/new", get(new))             // 【GET /interviews/new】: 作成フォーム表示 (権限: admin, trainer)
         .add("/", post(create))            // 【POST /interviews】: 面談作成処理 (権限: admin, trainer)
-        .add("/:id", get(show))            // 【GET /interviews/{id}】: 面談詳細表示 (権限: 全ユーザー, データ制限あり)
-        .add("/:id", put(update))          // 【PUT /interviews/{id}】: 面談更新処理 (権限: admin, trainer)
+        .add("/{id}", get(show))            // 【GET /interviews/{id}】: 面談詳細表示 (権限: 全ユーザー, データ制限あり)
+        .add("/{id}", put(update))          // 【PUT /interviews/{id}】: 面談更新処理 (権限: admin, trainer)
 }

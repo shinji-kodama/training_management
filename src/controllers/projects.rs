@@ -497,7 +497,7 @@ pub fn routes() -> Routes {
         .add("/", get(list))           // 【一覧表示】: GET /projects（認証必須）
         .add("/new", get(new))         // 【作成フォーム】: GET /projects/new（作成権限必須）
         .add("/", post(create))        // 【作成処理】: POST /projects（作成権限・CSRF保護）
-        .add("/:id", get(show))        // 【詳細表示】: GET /projects/{id}（認証必須・企業制限）
-        .add("/:id/participants", post(add_participant)) // 【参加者追加】: POST /projects/{id}/participants（管理権限必須）
-        .add("/:id/participants/:participant_id", put(update_participant)) // 【参加者状況更新】: PUT /projects/{id}/participants/{participant_id}（管理権限必須）
+        .add("/{id}", get(show))        // 【詳細表示】: GET /projects/{id}（認証必須・企業制限）
+        .add("/{id}/participants", post(add_participant)) // 【参加者追加】: POST /projects/{id}/participants（管理権限必須）
+        .add("/{id}/participants/{participant_id}", put(update_participant)) // 【参加者状況更新】: PUT /projects/{id}/participants/{participant_id}（管理権限必須）
 }

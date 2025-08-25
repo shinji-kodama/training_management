@@ -307,5 +307,5 @@ pub fn routes() -> Routes {
         .add("/", get(list))               // 【GET /materials】: 教材一覧
         .add("/new", get(new))             // 【GET /materials/new】: 作成フォーム
         .add("/", post(create))            // 【POST /materials】: 作成処理
-        .add("/:id", get(show))            // 【GET /materials/{id}】: 詳細表示
+        .add("/{id}", get(show))            // 【GET /materials/{id}】: 詳細表示
 }
